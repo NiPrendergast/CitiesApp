@@ -11,8 +11,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
@@ -42,30 +40,25 @@ public class CityService {
         return citiesDTOs;
     }
 
-    public ResponseEntity<Map<String, Object>> getAllCities(Integer page, Integer pageSize) {
-        try {
-            log.info("getting all cities");
-            Pageable paging = PageRequest.of(page, pageSize);
-            Page<City> pageCities = cityRepository.findAll(paging);
-            List<CityResponseDto> cities = pageCities.getContent()
-                    .stream()
-                    .map(city -> modelMapper.map(city, CityResponseDto.class))
-                    .collect(Collectors.toList());
+    public Map<String, Object> getAllCities(Integer page, Integer pageSize) {
+        log.info("getting all cities");
+        Pageable paging = PageRequest.of(page, pageSize);
+        Page<City> pageCities = cityRepository.findAll(paging);
+        List<CityResponseDto> cities = pageCities.getContent()
+                .stream()
+                .map(city -> modelMapper.map(city, CityResponseDto.class))
+                .collect(Collectors.toList());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("cities", cities);
-            response.put("currentPage", pageCities.getNumber());
-            response.put("totalItems", pageCities.getTotalElements());
-            response.put("totalPages", pageCities.getTotalPages());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("Error happened when getting all cities:", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("cities", cities);
+        response.put("currentPage", pageCities.getNumber());
+        response.put("totalItems", pageCities.getTotalElements());
+        response.put("totalPages", pageCities.getTotalPages());
+        return response;
     }
 
     @Secured("ROLE_ALLOW_EDIT")
-    public ResponseEntity<CityResponseDto> updateCity(long id, CityUpdateRequestDto cityUpdateRequestDto) {
+    public CityResponseDto updateCity(long id, CityUpdateRequestDto cityUpdateRequestDto) {
         log.info("updating city with id: {}", id);
         City updateCity = cityRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("the city with id:" + id + " does not exist"));
@@ -74,8 +67,7 @@ public class CityService {
         updateCity.setPhoto(cityUpdateRequestDto.getPhoto());
         cityRepository.save(updateCity);
         log.info("city with id {} successfully updated", id);
-        CityResponseDto response = modelMapper.map(updateCity, CityResponseDto.class);
-        return ResponseEntity.ok(response);
+        return modelMapper.map(updateCity, CityResponseDto.class);
     }
 
 }

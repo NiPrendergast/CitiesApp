@@ -1,4 +1,4 @@
-package com.app.cities.config;
+package com.app.cities.tool;
 
 import com.app.cities.model.City;
 import com.app.cities.repo.CityRepository;

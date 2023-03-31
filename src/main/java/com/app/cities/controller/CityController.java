@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ import java.util.Map;
 @AllArgsConstructor
 @RequestMapping(CityController.URL)
 @Tag(name = "City API")
+@Slf4j
 @Validated
 public class CityController {
 
@@ -47,8 +49,9 @@ public class CityController {
                     mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = CityResponseDto.class)))})})
     @GetMapping("/{name}")
-    public List<CityResponseDto> getCity(@PathVariable @NotBlank String name) {
-        return cityService.findByName(name);
+    public ResponseEntity<List<CityResponseDto>> getCity(@PathVariable @NotBlank String name) {
+        List<CityResponseDto> response = cityService.findByName(name);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Get all cities")
@@ -59,7 +62,13 @@ public class CityController {
     public ResponseEntity<Map<String, Object>> getAllCities(@RequestParam @Min(0) int pageNumber,
                                                             @RequestParam @Min(1) @Max(50)
                                                             int pageSize) {
-        return cityService.getAllCities(pageNumber, pageSize);
+        try {
+            Map<String, Object> response = cityService.getAllCities(pageNumber, pageSize);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error happened when getting all cities:", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @Operation(summary = "Update city")
@@ -68,8 +77,7 @@ public class CityController {
             content = {@Content(mediaType = "application/json")})})
     @PutMapping("/{id}")
     public ResponseEntity<CityResponseDto> updateCity(@PathVariable @Positive Long id, @Parameter(description = "City DTO to update", required = true)  @Valid @RequestBody CityUpdateRequestDto cityUpdateRequestDto) {
-        return cityService.updateCity(id, cityUpdateRequestDto);
+        CityResponseDto response = cityService.updateCity(id, cityUpdateRequestDto);
+        return ResponseEntity.ok(response);
     }
-
-
 }
